@@ -1,0 +1,117 @@
+===================================================================================
+        HALITE ET IMPERA --- README
+===================================================================================
+
+  Nume Echipa: Halite et Impera
+
+Etapa Curenta: Etapa 3
+
+===================================================================================
+        I. Instructiuni de compilare
+===================================================================================
+
+- Pentru compilare, trebuie ca "Makefile", "Polaris_v8.java" si folder-ul "hlt" sa
+  se afle in acelasi folder.
+
+- Comanda pentru compilare: "make build"
+
+===================================================================================
+        II. Detalii despre structura proiectului
+===================================================================================
+
+  Am programat bot-ul in limbajul Java, iar proiectul este organizat astfel:
+
+- In clasa "Polaris_v8" am implementat strategia bot-ului pentru evitarea
+  coliziunilor atat intre propriile nave, cat si intre nave aliate si nave inamice.
+  De asemenea in aceasta clasa am implementat strategia de cucerire a planelor si
+  de ofensiva impotriva inamicului.
+
+- In pachetul "hlt" se afla clasele pentru navigare, detectarea coliziunilor,
+  gestionarea mutarilor intre runde. Clasele din pachetul "hlt" au la baza codul
+  pus la dispozitie din starter pack-ul, insa multe functionalitati (de exemplu
+  evitarea coliziunilor) sunt imbunatatite de noi conform obiectivelor etapei 1, 2
+  si 3 din enunt.
+
+===================================================================================
+        III. Detalii despre abordarea algoritmica a etapei
+===================================================================================
+
+- Am implementat urmatoarea strategie pentru a invinge mai multi boti inamici: bot-ul
+  nostru creaza o lista cu navele sale nedocate (libere). Cat timp lista cu navele
+  libere nu este goala, bot-ul foloseste una din cele doua strategii in functie de
+  cat de aproape sunt navele inamice fata de navele proprii:
+
+- Daca navele inamice sunt la o distanta suficient de mica pentru a fi atacate de
+  navele noastre, atunci atacam direct aceste nave inamice. Aceasta strategie este
+  foarte eficienta pe hartile de dimensiuni mici deoarece putem invinge repede bot-ul
+  inamic.
+
+- Daca navele inamice sunt la o distanta mare, atunci folosim o alta strategie:
+  bot-ul cauta cele mai optime perechi de tipul {nava, planeta} folosind o euristica,
+  asignand fiecarei nave libere cate o planeta. In momentul in care unei nave ii este
+  asignata o planeta, nava respectiva este eliminata din lista.
+
+- Daca planeta tinta este deja cucerita de adversar, atunci nava ca ataca mai intai
+  navele inamice docate pe acea planeta, iar apoi va cuceri si planeta.
+
+- Pentru ca navele sa cucereasca eficient o mare parte din harta, am inventat o
+  euristica pentru gasirea perechilor optime de tipul {nava, planeta}:
+
+  score = dist(planet, ship) + (isMyPlanet ? (30 * planetPotential) : 0)
+                             + ((planet.isFull() && isMyPlanet) ? 1000 : 0);
+
+  unde: planetPotential = planet.numberOfDockedShips / planet.numberOfDockingSpots;
+
+- Cu cat valoarea variabilei "score" este mai mica, cu atat planeta respectiva este
+  o tinta mai buna pentru nava curenta. Planeta tinta este aleasa in functie de
+  distanta dintre ea si nava (distanta dintre ele sa fie cat mai mica), insa daca
+  nava este deja cucerita de bot-ul curent, atunci se va lua in calcul si raportul
+  dintre numarul de nave aliate care sunt deja docate pe acea planeta si numarul
+  maxim de nave ce pot doca pe planeta respectiva.
+
+- In modul acesta, am gandit bot-ul in asa fel incat sa-si distribuie in mod egal
+  navele catre planete, cucerind mult mai repede harta prin folosirea eurisiticii
+  inventate mai sus decat daca ar fi luat in calcul numai distantele minime intre
+  nave si planete.
+
+- Pentru evitarea evitarea coliziunilor intre nave, calculam noile pozitii ale
+  navelor aliate pentru runda urmatoare (urmatorul "turn") si stocam treptat
+  aceste noi pozitii intr-o lista numita "occupiedPositions".
+
+- Cu alte cuvinte, in runda curenta, anticipam pozitiile navelor in runda urmatoare
+  pentru a ne folosi de aceasta informatie in scopul evitarii coliziunilor. Calculul
+  noilor pozitii se face aplicand o formula simpla:
+
+       nextShipPos.X = oldShipPos.X + shipSpeed * cos(shipAngle)
+       nextShipPos.Y = oldShipPos.Y + shipSpeed * sin(shipAngle)
+   
+- Stocam treptat noile pozitii, deoarece verificam inainte de adaugarea uneia in
+  lista daca pozitia respectiva de pe harta este deja ocupata de o alta nava
+  aliata.
+
+- Astfel, garantam faptul ca in runda urmatoare se vor produce cat mai putine
+  coliziuni intre navele aliate, deoarece daca noua pozitie a unei nave este
+  adaugata cu succes in lista de pozitii ocupate, atunci toate celelalte nave nu
+  se vor putea deplasa pe aceeasi pozitie in urmatoare runda.
+
+- Pentru evitarea coliziunilor intre navele aliate si cele inamice verificam
+  pentru fiecare nava aliata daca exista o nava inamica la o distanta mai mica
+  de 5 unitati, iar daca da, atunci micsoram viteza navei la 0. Astfel, evitam o
+  eventuala coliziune provocata de propria nava si tot astfel permitem navei sa
+  poata ataca nava inamica din apropiere din moment ce aceasta se afla suficient
+  de aproape incat sa fie in raza de atac a navei aliate.
+
+===================================================================================
+        IV. Surse de inspiratie
+===================================================================================
+
+- Pentru implementarea bot-ului nu am folosit nicio sursa de inspiratie externa,
+  ideile pentru tacticile de cucerire a planetelor si de evitare a coliziunilor
+  intre nave fiind ale membrilor echipei noastre.
+
+- Ca si la prima etapa a proiectului, pentru proiectarea strategiilor am schitat pe
+  hartie situatii posibile, iar pentru gasirea formulei pentru calcularea noilor
+  pozitii ale navelor am folosit cunostintele de trigonometrie, dupa care am
+  implementat si testat codul pentru a verifica daca ideile noastre sunt eficiente.
+
+=================================================================================
